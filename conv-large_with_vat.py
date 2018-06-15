@@ -39,12 +39,11 @@ def normalize_vector(x):
         z = K.expand_dims(z, axis=-1)
     return x / (K.sqrt(z))
 
-def kld(p, q):
-    v = p * (K.log(p + K.constant(0.000001)) - K.log(q + K.constant(0.000001)))
-    return K.sum(K.batch_flatten(v), axis=1, keepdims=True)
-
 
 def loss_with_vat(target, output):
+    def kld(p, q):
+        v = p * (K.log(p + K.constant(0.000001)) - K.log(q + K.constant(0.000001)))
+        return K.sum(K.batch_flatten(v), axis=1, keepdims=True)
     normal_outputs = [K.stop_gradient(x) for x in model.outputs]
     d_list = [K.random_normal((32, 32, 3))] * batch_size
     ip = 1
