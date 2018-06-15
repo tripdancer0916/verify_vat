@@ -46,7 +46,7 @@ def kld(p, q):
 
 def loss_with_vat(target, output):
     normal_outputs = [K.stop_gradient(x) for x in model.outputs]
-    d_list = [K.random_normal((28, 28, 1))] * 320
+    d_list = [K.random_normal((32, 32, 3))] * batch_size
     ip = 1
     xi = 10
     eps = 2
@@ -63,6 +63,7 @@ def loss_with_vat(target, output):
     klds = [K.mean(kld(normal, new)) for normal, new in zip(normal_outputs, [y_perturbations])]
     kld = reduce(lambda t, x: t + x, klds, 0)
     return K.categorical_crossentropy(target, output) + kld / batch_size
+
 
 input_layer = Input(x_train.shape[1:])
 x = Convolution2D(128, (3, 3), padding='same')(input_layer)
