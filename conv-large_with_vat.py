@@ -13,6 +13,9 @@ from keras.layers import Dense, Dropout, Activation, Flatten, advanced_activatio
 from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling
 import os
 
+import keras.backend.tensorflow_backend as KTF
+import tensorflow as tf
+
 from functools import reduce
 
 batch_size = 32
@@ -53,7 +56,6 @@ def loss_with_vat(target, output):
     for _ in range(ip):
         new_inputs = [x + normalize_vector(d) * xi for (x, d) in zip(model.inputs, d_list)]
         new_outputs = [model.call(new_inputs)]
-        # kld(normal_outputs, new_outputs)
         klds = [K.sum(kld_(normal, new)) for normal, new in zip(normal_outputs, new_outputs)]
         kld = reduce(lambda t, x: t + x, klds, 0)
         d_list = [K.stop_gradient(d) for d in K.gradients(kld, d_list)]
@@ -65,76 +67,85 @@ def loss_with_vat(target, output):
     return K.categorical_crossentropy(target, output) + kld / batch_size
 
 
-input_layer = Input(x_train.shape[1:])
-x = Convolution2D(128, (3, 3), padding='same')(input_layer)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(128, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(128, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+old_session = KTF.get_session()
+with tf.Graph().as_default():
+    session = tf.Session('')
+    KTF.set_session(session)
+    KTF.set_learning_phase(1)
+    input_layer = Input(x_train.shape[1:])
+    x = Convolution2D(128, (3, 3), padding='same')(input_layer)
+    x = BatchNormalization()(x)
+    x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+    x = Convolution2D(128, (3, 3), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+    x = Convolution2D(128, (3, 3), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 
-x = MaxPooling2D((2, 2), strides=(2, 2))(x)
-x = Dropout(0.5)(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2))(x)
+    x = Dropout(0.5)(x)
 
-x = Convolution2D(256, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(256, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(256, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+    x = Convolution2D(256, (3, 3), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+    x = Convolution2D(256, (3, 3), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+    x = Convolution2D(256, (3, 3), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 
-x = MaxPooling2D((2, 2), strides=(2, 2))(x)
-x = Dropout(0.5)(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2))(x)
+    x = Dropout(0.5)(x)
 
-x = Convolution2D(512, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(256, (1, 1), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(128, (1, 1), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+    x = Convolution2D(512, (3, 3), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+    x = Convolution2D(256, (1, 1), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+    x = Convolution2D(128, (1, 1), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 
-x = pooling.GlobalAveragePooling2D()(x)
+    x = pooling.GlobalAveragePooling2D()(x)
 
-output = Dense(10, activation="softmax")(x)
+    output = Dense(10, activation="softmax")(x)
 
+    opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
 
-opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
+    log_filepath = './log'
+    tb_cb = keras.callbacks.TensorBoard(log_dir=log_filepath, histogram_freq=1)
+    cbks = [tb_cb]
+    model = Model(input_layer, output)
+    model.summary()
+    model.compile(loss=loss_with_vat,
+                  optimizer=opt,
+                  metrics=['accuracy'])
 
-model = Model(input_layer, output)
-model.summary()
-model.compile(loss=loss_with_vat,
-              optimizer=opt,
-              metrics=['accuracy'])
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
+    x_train /= 255
+    x_test /= 255
 
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train /= 255
-x_test /= 255
+    print('Not using data augmentation.')
+    model.fit(x_train, y_train,
+              batch_size=batch_size,
+              epochs=epochs, callbacks=cbks,
+              validation_data=(x_test, y_test),
+              shuffle=True)
 
-print('Not using data augmentation.')
-model.fit(x_train, y_train,
-          batch_size=batch_size,
-          epochs=epochs,
-          validation_data=(x_test, y_test),
-          shuffle=True)
+    # Save model and weights
+    if not os.path.isdir(save_dir):
+        os.makedirs(save_dir)
+    model_path = os.path.join(save_dir, model_name)
+    model.save(model_path)
+    print('Saved trained model at %s ' % model_path)
 
-# Save model and weights
-if not os.path.isdir(save_dir):
-    os.makedirs(save_dir)
-model_path = os.path.join(save_dir, model_name)
-model.save(model_path)
-print('Saved trained model at %s ' % model_path)
+    # Score trained model.
+    scores = model.evaluate(x_test, y_test, verbose=1)
+    print('Test loss:', scores[0])
+    print('Test accuracy:', scores[1])
 
-# Score trained model.
-scores = model.evaluate(x_test, y_test, verbose=1)
-print('Test loss:', scores[0])
-print('Test accuracy:', scores[1])
+KTF.set_session(old_session)
