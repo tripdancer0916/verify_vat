@@ -134,7 +134,7 @@ with tf.Graph().as_default():
               batch_size=batch_size,
               epochs=epochs, callbacks=cbks,
               validation_data=(x_test, y_test),
-              shuffle=True)
+              shuffle=True, verbose=2)
 
     # Save model and weights
     if not os.path.isdir(save_dir):
