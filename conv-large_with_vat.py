@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 import keras
+from keras import backend as K
 from keras.datasets import cifar10
 from keras.preprocessing.image import ImageDataGenerator
 from keras.engine.topology import Input, Container
@@ -11,6 +12,8 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, advanced_activations, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling
 import os
+
+from functools import reduce
 
 batch_size = 32
 num_classes = 10
@@ -28,6 +31,38 @@ print(x_test.shape[0], 'test samples')
 # Convert class vectors to binary class matrices.
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
+
+
+def normalize_vector(x):
+    z = K.sum(K.batch_flatten(K.square(x)), axis=1)
+    while K.ndim(z) < K.ndim(x):
+        z = K.expand_dims(z, axis=-1)
+    return x / (K.sqrt(z))
+
+def kld(p, q):
+    v = p * (K.log(p + K.constant(0.000001)) - K.log(q + K.constant(0.000001)))
+    return K.sum(K.batch_flatten(v), axis=1, keepdims=True)
+
+
+def loss_with_vat(target, output):
+    normal_outputs = [K.stop_gradient(x) for x in model.outputs]
+    d_list = [K.random_normal((28, 28, 1))] * 320
+    ip = 1
+    xi = 10
+    eps = 2
+    for _ in range(ip):
+        new_inputs = [x + normalize_vector(d) * xi for (x, d) in zip(model.inputs, d_list)]
+        new_outputs = [model.call(new_inputs)]
+        kld(normal_outputs, new_outputs)
+        klds = [K.sum(kld(normal, new)) for normal, new in zip(normal_outputs, new_outputs)]
+        kld = reduce(lambda t, x: t + x, klds, 0)
+        d_list = [K.stop_gradient(d) for d in K.gradients(kld, d_list)]
+
+    new_inputs = [x + normalize_vector(d) * eps for (x, d) in zip(model.inputs, d_list)]
+    y_perturbations = model.call(new_inputs)
+    klds = [K.mean(kld(normal, new)) for normal, new in zip(normal_outputs, [y_perturbations])]
+    kld = reduce(lambda t, x: t + x, klds, 0)
+    return K.categorical_crossentropy(target, output) + kld / batch_size
 
 input_layer = Input(x_train.shape[1:])
 x = Convolution2D(128, (3, 3), padding='same')(input_layer)
@@ -76,7 +111,7 @@ opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
 model = Model(input_layer, output)
 model.summary()
 # Let's train the model using RMSprop
-model.compile(loss='categorical_crossentropy',
+model.compile(loss=loss_with_vat,
               optimizer=opt,
               metrics=['accuracy'])
 
