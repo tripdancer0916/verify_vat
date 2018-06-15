@@ -28,7 +28,6 @@ print('x_train shape:', x_train.shape)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
 
-# Convert class vectors to binary class matrices.
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
@@ -107,12 +106,11 @@ x = pooling.GlobalAveragePooling2D()(x)
 
 output = Dense(10, activation="softmax")(x)
 
-# initiate RMSprop optimizer
+
 opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
 
 model = Model(input_layer, output)
 model.summary()
-# Let's train the model using RMSprop
 model.compile(loss=loss_with_vat,
               optimizer=opt,
               metrics=['accuracy'])

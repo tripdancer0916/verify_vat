@@ -70,12 +70,11 @@ x = pooling.GlobalAveragePooling2D()(x)
 
 output = Dense(10, activation="softmax")(x)
 
-# initiate RMSprop optimizer
+
 opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
 
 model = Model(input_layer, output)
 model.summary()
-# Let's train the model using RMSprop
 model.compile(loss='categorical_crossentropy',
               optimizer=opt,
               metrics=['accuracy'])
