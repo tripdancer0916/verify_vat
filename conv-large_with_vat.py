@@ -40,10 +40,12 @@ def normalize_vector(x):
     return x / (K.sqrt(z))
 
 
+def kld_(p, q):
+    v = p * (K.log(p + K.constant(0.000001)) - K.log(q + K.constant(0.000001)))
+    return K.sum(K.batch_flatten(v), axis=1, keepdims=True)
+
+
 def loss_with_vat(target, output):
-    def kld(p, q):
-        v = p * (K.log(p + K.constant(0.000001)) - K.log(q + K.constant(0.000001)))
-        return K.sum(K.batch_flatten(v), axis=1, keepdims=True)
     normal_outputs = [K.stop_gradient(x) for x in model.outputs]
     d_list = [K.random_normal((32, 32, 3))] * batch_size
     ip = 1
@@ -52,14 +54,14 @@ def loss_with_vat(target, output):
     for _ in range(ip):
         new_inputs = [x + normalize_vector(d) * xi for (x, d) in zip(model.inputs, d_list)]
         new_outputs = [model.call(new_inputs)]
-        kld(normal_outputs, new_outputs)
-        klds = [K.sum(kld(normal, new)) for normal, new in zip(normal_outputs, new_outputs)]
+        # kld(normal_outputs, new_outputs)
+        klds = [K.sum(kld_(normal, new)) for normal, new in zip(normal_outputs, new_outputs)]
         kld = reduce(lambda t, x: t + x, klds, 0)
         d_list = [K.stop_gradient(d) for d in K.gradients(kld, d_list)]
 
     new_inputs = [x + normalize_vector(d) * eps for (x, d) in zip(model.inputs, d_list)]
     y_perturbations = model.call(new_inputs)
-    klds = [K.mean(kld(normal, new)) for normal, new in zip(normal_outputs, [y_perturbations])]
+    klds = [K.mean(kld_(normal, new)) for normal, new in zip(normal_outputs, [y_perturbations])]
     kld = reduce(lambda t, x: t + x, klds, 0)
     return K.categorical_crossentropy(target, output) + kld / batch_size
 
