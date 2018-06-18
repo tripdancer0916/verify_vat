@@ -15,9 +15,6 @@ import os
 
 import numpy as np
 
-import keras.backend.tensorflow_backend as KTF
-import tensorflow as tf
-
 from functools import reduce
 
 batch_size = 100
@@ -123,7 +120,7 @@ lr_cb = keras.callbacks.LearningRateScheduler(lambda epoch: float(learning_rates
 
 model = Model(input_layer, output)
 model.summary()
-model.compile(loss=loss_with_vat,
+model.compile(loss='categorical_crossentropy',
               optimizer=opt,
               metrics=['accuracy'])
 
