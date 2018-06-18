@@ -73,7 +73,7 @@ x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 x = Convolution2D(128, (3, 3), padding='same')(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(128, (3, 3), padding='same')(x)
+x = Convolution2D(128, (3, 3), padding='valid')(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 
@@ -86,7 +86,7 @@ x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 x = Convolution2D(256, (3, 3), padding='same')(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(256, (3, 3), padding='same')(x)
+x = Convolution2D(256, (3, 3), padding='valid')(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 
@@ -99,7 +99,7 @@ x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 x = Convolution2D(256, (1, 1), padding='same')(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(128, (1, 1), padding='same')(x)
+x = Convolution2D(128, (1, 1), padding='valid')(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 
@@ -115,8 +115,8 @@ def learning_rates(epoch):
         return np.linspace(0.003, 0.0005, int(epochs / 2))[epoch]
 
 
-opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
-lr_cb = keras.callbacks.LearningRateScheduler(lambda epoch: float(learning_rates(epoch)))
+opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+# lr_cb = keras.callbacks.LearningRateScheduler(lambda epoch: float(learning_rates(epoch)))
 
 model = Model(input_layer, output)
 model.summary()
