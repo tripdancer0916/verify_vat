@@ -151,8 +151,7 @@ datagen = ImageDataGenerator(
     vertical_flip=False,  # randomly flip images
     rescale=None,  # set rescaling factor (applied before any other transformation)
     preprocessing_function=None,  # set function that will be applied on each input
-    data_format=None,  # image data format, either "channels_first" or "channels_last"
-    validation_split=0.0)  # fraction of images reserved for validation (strictly between 0 and 1)
+    data_format=None)
 
 # Compute quantities required for feature-wise normalization
 # (std, mean, and principal components if ZCA whitening is applied).
