@@ -118,7 +118,7 @@ def learning_rates(epoch):
         return np.linspace(0.003, 0.0005, int(epochs / 2))[epoch]
 
 
-opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
+opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 lr_cb = keras.callbacks.LearningRateScheduler(lambda epoch: float(learning_rates(epoch)))
 
 model = Model(input_layer, output)
