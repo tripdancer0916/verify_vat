@@ -112,7 +112,7 @@ def learning_rates(epoch):
     if epoch < epochs / 2:
         return 0.003
     else:
-        return np.linspace(0.003, 0.0005, int(epochs / 2))[epoch]
+        return np.linspace(0.003, 0.0005, int(epochs / 2))[epoch-int(epochs / 2)]
 
 
 opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
