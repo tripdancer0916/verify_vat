@@ -67,7 +67,7 @@ def loss_with_vat(target, output):
     return K.categorical_crossentropy(target, output) + kld / batch_size
 
 
-cnn_trainable=True
+cnn_trainable = True
 
 input_layer = Input(x_train.shape[1:])
 x = Conv2D(32, (3, 3), use_bias=False, padding='same', name='block1_conv1', trainable=cnn_trainable)(input_layer)
@@ -167,16 +167,17 @@ x = BatchNormalization(name='block14_sepconv2_bn', trainable=cnn_trainable)(x)
 x = Activation('relu', name='block14_sepconv2_act', trainable=cnn_trainable)(x)
 
 x = GlobalAveragePooling2D(name='avg_pool')(x)
-x = Dense(10, activation='softmax', name='predictions')(x)
+output = Dense(10, activation='softmax', name='predictions')(x)
 
-model = Model(input_layer, x, name='xception')
+
+# 　model = Model(input_layer, x, name='xception')
 
 
 def learning_rates(epoch):
     if epoch < epochs / 2:
         return 0.003
     else:
-        return np.linspace(0.003, 0.0005, int(epochs / 2))[epoch-int(epochs / 2)]
+        return np.linspace(0.003, 0.0005, int(epochs / 2))[epoch - int(epochs / 2)]
 
 
 opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
