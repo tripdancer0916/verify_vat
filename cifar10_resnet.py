@@ -8,7 +8,7 @@ GPU run command with Theano backend (with TensorFlow, the GPU is automatically u
 from __future__ import print_function
 from keras.datasets import cifar10
 from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import np_utils
+from keras.utils import np_utils, plot_model
 from keras.callbacks import ReduceLROnPlateau, CSVLogger, EarlyStopping
 
 import numpy as np
@@ -49,6 +49,8 @@ X_test /= 128.
 model = resnet.ResnetBuilder.build_resnet_18((img_channels, img_rows, img_cols), nb_classes)
 
 model.summary()
+plot_model(model, to_file='resNet.png')
+
 model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
