@@ -5,6 +5,7 @@ from __future__ import print_function
 import keras
 from keras import backend as K
 from keras.datasets import cifar10
+from keras.utils import plot_model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.engine.topology import Input, Container
 from keras.engine.training import Model
@@ -123,6 +124,7 @@ lr_cb = keras.callbacks.LearningRateScheduler(lambda epoch: float(learning_rates
 
 model = Model(input_layer, output)
 model.summary()
+plot_model(model)
 model.compile(loss=loss_with_vat,
               optimizer=opt,
               metrics=['accuracy'])
