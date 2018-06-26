@@ -19,7 +19,7 @@ from functools import reduce
 
 batch_size = 100
 num_classes = 10
-epochs = 300
+epochs = 500
 num_predictions = 20
 save_dir = os.path.join(os.getcwd(), 'saved_models')
 model_name = 'keras_cifar10_trained_model.h5'
@@ -109,10 +109,10 @@ output = Dense(10, activation="softmax")(x)
 
 
 def learning_rates(epoch):
-    if epoch < epochs / 2:
+    if epoch < 150:
         return 0.003
     else:
-        return np.linspace(0.003, 0.0001, int(epochs / 2))[epoch-int(epochs / 2)]
+        return np.linspace(0.003, 0.00005, int(150))[epoch - int(150)]
 
 
 opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
