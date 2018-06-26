@@ -124,7 +124,7 @@ lr_cb = keras.callbacks.LearningRateScheduler(lambda epoch: float(learning_rates
 
 model = Model(input_layer, output)
 model.summary()
-plot_model(model)
+plot_model(model, show_shapes=True)
 model.compile(loss=loss_with_vat,
               optimizer=opt,
               metrics=['accuracy'])
