@@ -151,7 +151,7 @@ lr_cb = keras.callbacks.LearningRateScheduler(lambda epoch: float(learning_rates
 
 model = Model(input_layer, output)
 model.summary()
-model.compile(loss='categorical_crossentropy',
+model.compile(loss=loss_with_vat,
               optimizer=opt,
               metrics=['accuracy'])
 
